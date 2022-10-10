@@ -1,6 +1,6 @@
 # Pornstarcrawler (NSFW)
 
-The pornstarcrawler is a tool to download porn images of your favourite pornstar by scraping it from various websites .
+The pornstarcrawler is a tool to download porn images of your favourite pornstar by scraping it from various websites
 
 ## Installation
 
