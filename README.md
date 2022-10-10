@@ -7,7 +7,7 @@ The pornstarcrawler is a tool to download porn images of your favourite pornstar
 Use the package manager [pip](https://pip.pypa.io/en/stable/) to install packages for pornstarcrawler from requirements. txt file .
 
 ```bash
- pip install -r requirements. txt
+ pip install -r requirements.txt
 ```
 
 ## Usage
