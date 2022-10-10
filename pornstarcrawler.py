@@ -163,7 +163,7 @@ def s5():
 		i=i+1
 		urls.clear()
 	
-#s3()
+s3()
 s5()
 
 
