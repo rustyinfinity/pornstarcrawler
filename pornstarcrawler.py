@@ -9,12 +9,17 @@ import random
 import subprocess
 from multiprocessing.pool import ThreadPool
 
-
+##V1
 
 name_q=input("Enter Model Name: ")
 name=name_q.replace(" " ,"-")
 
-os.mkdir(f'./{name}')
+isExist = os.path.exists(f'./{name}')
+if not isExist:
+
+   os.makedirs(f'./{name}')
+   print("The new directory is created!")
+
 
 def s2():
 
@@ -24,8 +29,7 @@ def s2():
 
 	def download_url(url):
 			  print("downloading: ",url)
-			  # assumes that the last segment after the / represents the file name
-			  # if url is abc/xyz/file.txt, the file name will be file.txt
+			 
 			  file_name_start_pos = url.rfind("/") + 1
 			  file_name = url[file_name_start_pos:]
 			 
@@ -44,14 +48,14 @@ def s2():
 		    ac='https://www.porngals4.com'
 		    bc=tag['href']
 		    urlsc.append(ac+bc)
-		    print(len(urlsc))
+		    #print(len(urlsc))
 
-	while len(urlsc) != 5:
+	while len(urlsc) > 5:
 
 		print(f'Starting Page {q}')
 
 		s2=f'https://www.porngals4.com/{name}/{q}'
-		print(s2)
+		#print(s2)
 		r=requests.get(s2)
 		soup = BeautifulSoup(r.text, 'html.parser')
 		urls=[]
@@ -70,7 +74,7 @@ def s2():
 				image_url.append(tag['href'])
 
 			
-			print(f'Finished {i}')
+			#print(f'Finished {i}')
 			i=i+1
 		q=q+1
 		urlsc.clear()
@@ -98,13 +102,12 @@ def s3():
 		b=tag['href']
 		urls.append(a+b)
 	
-	print (urls)
-	print (len(urls))
+	#print (urls)
+	#print (len(urls))
 
 	def download_url(url):
 			  print("downloading: ",url)
-			  # assumes that the last segment after the / represents the file name
-			  # if url is abc/xyz/file.txt, the file name will be file.txt
+			  
 			  file_name_start_pos = url.rfind("/") + 1
 			  file_name = url[file_name_start_pos:]
 			 
@@ -126,7 +129,7 @@ def s3():
 
 			a='https:' + tag['src']
 			b=a.replace("hd-" , "")
-			print(b)
+			#print(b)
 			image_url.append(b)
 			print(f'Finished {i}')
 
@@ -143,13 +146,15 @@ def s3():
 def s5():
 
 	first_char=name[0]	
+	#print(first_char)
 	search=f'https://babesource.com/pornstars/?letter={first_char}'
 	rs=requests.get(search)
 	soup = BeautifulSoup(rs.text, 'html.parser')
-	
+	#print(name)
 	for tag in soup.findAll('a' , class_="pornstars-lists__link",  href=re.compile(f'^https://babesource.com/pornstars/{name}')):
 		p_page = (tag['href'])
 
+	#print(p_page)
 	s5=f'{p_page}page1.html'
 	r=requests.get(s5)
 	soup = BeautifulSoup(r.text, 'html.parser')
@@ -165,13 +170,14 @@ def s5():
 	b=a.replace("page" , "")
 	total_pages=b.replace(".html" , "")
 
-	print(total_pages)
+	#
+	#print(total_pages)
 
 	
 
 	i = 1
 
-	while i < int(total_pages):
+	while i <= int(total_pages):
 		image_htmlc=requests.get(f'{p_page}page{i}.html')
 		urls=[]
 
@@ -180,7 +186,7 @@ def s5():
 		for tag in soup2c.findAll('a' , class_="main-content__card-link",  href=re.compile('^https://babesource.com/galleries/')):
 			urls.append(tag['href'])
 
-		print(len(urls))
+		#print(len(urls))
 		k = 0
 
 
@@ -191,8 +197,7 @@ def s5():
 			full_name=name_a.replace(".html" , "")
 			def download_url(url):
 			  print("downloading: ",url)
-			  # assumes that the last segment after the / represents the file name
-			  # if url is abc/xyz/file.txt, the file name will be file.txt
+
 			  file_name_start_pos = url.rfind("/") + 1
 
 			  file_name = url[file_name_start_pos:]
@@ -204,7 +209,7 @@ def s5():
 			        f.write(data)
 			  return url
 			
-			print(urls[k])
+			#print(urls[k])
 			
 			soup2d = BeautifulSoup(image_htmld.text, 'html.parser')
 
@@ -212,19 +217,18 @@ def s5():
 
 
 				image_url.append(tag['href'])
+			
+			image_url = list(set(image_url))
+			results = ThreadPool(10).imap_unordered(download_url,image_url)
+			for r in results:
+				print(r)
 
 
 				
 			k=k+1
 		i=i+1
 		urls.clear()
-	image_url = list(set(image_url))
-	results = ThreadPool(10).imap_unordered(download_url,image_url)
-	for r in results:
-		print(r)
-
-
-
+	
 s2()
 s3()
 s5()
