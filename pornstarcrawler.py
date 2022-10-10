@@ -149,19 +149,21 @@ def s5():
 
 
 				image_url.append(tag['href'])
+				print(image_url)
 			
-			image_url = list(set(image_url))
-			results = ThreadPool(10).imap_unordered(download_url,image_url)
-			for r in results:
-				print(r)
+			k=k+1
+		image_url = list(set(image_url))
+		results = ThreadPool(10).imap_unordered(download_url,image_url)
+		for r in results:
+			print(r)
 
 
 				
-			k=k+1
+			
 		i=i+1
 		urls.clear()
 	
-s3()
+#s3()
 s5()
 
 
