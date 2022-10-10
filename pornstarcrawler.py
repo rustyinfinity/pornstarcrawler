@@ -20,74 +20,6 @@ if not isExist:
    os.makedirs(f'./{name}')
    print("The new directory is created!")
 
-
-def s2():
-
-	q=1
-	image_url=[]
-	urlsc=[]
-
-	def download_url(url):
-			  print("downloading: ",url)
-			 
-			  file_name_start_pos = url.rfind("/") + 1
-			  file_name = url[file_name_start_pos:]
-			 
-			  r = requests.get(url, stream=True)
-			  if r.status_code == requests.codes.ok:
-			    with open(f'./{name}/{file_name}', 'wb') as f:
-			      for data in r:
-			        f.write(data)
-			  return url
-
-	def check():
-		s2c=f'https://www.porngals4.com/{name}/{q}'
-		rc=requests.get(s2c)
-		soupc = BeautifulSoup(rc.text, 'html.parser')
-		for tag in soupc.findAll('a',class_='nm' , href=True):
-		    ac='https://www.porngals4.com'
-		    bc=tag['href']
-		    urlsc.append(ac+bc)
-		    #print(len(urlsc))
-
-	while len(urlsc) > 5:
-
-		print(f'Starting Page {q}')
-
-		s2=f'https://www.porngals4.com/{name}/{q}'
-		#print(s2)
-		r=requests.get(s2)
-		soup = BeautifulSoup(r.text, 'html.parser')
-		urls=[]
-		for tag in soup.findAll('a',class_='nm' , href=True):
-		    a='https://www.porngals4.com'
-		    b=tag['href']
-		    urls.append(a+b)
-
-		i = 0
-		while i < len(urls):
-			
-			image_html=requests.get(urls[i])
-			soup2 = BeautifulSoup(image_html.text, 'html.parser')
-
-			for tag in soup2.findAll('a' ,class_='tn', href=True ):
-				image_url.append(tag['href'])
-
-			
-			#print(f'Finished {i}')
-			i=i+1
-		q=q+1
-		urlsc.clear()
-		check()
-	image_url = list(set(image_url))
-	print(image_url)
-	results = ThreadPool(10).imap_unordered(download_url,image_url)
-	for r in results:
-		print(r)
-	
-
-
-
 def s3():
 	s3=f'https://babes.porn/pics/{name}'
 	r=requests.get(s3)
@@ -229,7 +161,6 @@ def s5():
 		i=i+1
 		urls.clear()
 	
-s2()
 s3()
 s5()
 
