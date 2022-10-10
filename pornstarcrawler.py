@@ -63,7 +63,7 @@ def s3():
 			b=a.replace("hd-" , "")
 			#print(b)
 			image_url.append(b)
-			print(f'Finished {i}')
+		print(f'Finished {i}')
 
 		i=i+1
 
