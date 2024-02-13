@@ -2,176 +2,123 @@ import os
 import requests
 from bs4 import BeautifulSoup
 import re
-import time
-import tldextract
-import urllib.request
-import random
-import subprocess
-from multiprocessing.pool import ThreadPool
+import concurrent.futures
 
-##V1
+modelName = input("Enter Model Name: ").replace(" ", "-")
 
-name_q=input("Enter Model Name: ")
-name=name_q.replace(" " ,"-")
-
-isExist = os.path.exists(f'./{name}')
-if not isExist:
-
-   os.makedirs(f'./{name}')
-   print("The new directory is created!")
-
-def s3():
-	s3=f'https://babes.porn/pics/{name}'
-	r=requests.get(s3)
-	soup = BeautifulSoup(r.text, 'html.parser')
-	urls=[]
-	image_url=[]
-	
-
-	for tag in soup.findAll('a'  ,href=re.compile('^/photos/')):
-
-		a='https://babes.porn'
-		b=tag['href']
-		urls.append(a+b)
-	
-	#print (urls)
-	#print (len(urls))
-
-	def download_url(url):
-			  print("downloading: ",url)
-			  
-			  file_name_start_pos = url.rfind("/") + 1
-			  file_name = url[file_name_start_pos:]
-			 
-			  r = requests.get(url, stream=True)
-			  if r.status_code == requests.codes.ok:
-			    with open(f'./{name}/{file_name}', 'wb') as f:
-			      for data in r:
-			        f.write(data)
-			  return url
-
-	i = 0
-	while i < len(urls):
-		
-		image_html=requests.get(urls[i])
-		time.sleep(2)
-		soup2 = BeautifulSoup(image_html.text, 'html.parser')
-
-		for tag in soup2.findAll('img', src=re.compile('^//pornhd.vip/pics/') , alt='thumb'):
-
-			a='https:' + tag['src']
-			b=a.replace("hd-" , "")
-			#print(b)
-			image_url.append(b)
-		print(f'Finished {i}')
-
-		i=i+1
-
-	image_url = list(set(image_url))
-	results = ThreadPool(10).imap_unordered(download_url,image_url)
-	for r in results:
-		print(r)
+downloaded_unique_links = set()
 
 
+def download_link(link, folder):
+    response = requests.get(link)
+    filename = link.split('/')[-1]
+    filepath = os.path.join(folder, filename)
+    with open(filepath, 'wb') as file:
+        file.write(response.content)
+        print(f'Downloaded {filename}')
 
 
-def s5():
+def babesPornExtractor(name):
+    set_urls = []
+    site_url = 'https://babes.porn'
+    url = f'{site_url}/pics/{name}'
+    html_response = requests.get(url)
 
-	first_char=name[0]	
-	#print(first_char)
-	search=f'https://babesource.com/pornstars/?letter={first_char}'
-	rs=requests.get(search)
-	soup = BeautifulSoup(rs.text, 'html.parser')
-	#print(name)
-	for tag in soup.findAll('a' , class_="pornstars-lists__link",  href=re.compile(f'^https://babesource.com/pornstars/{name}')):
-		p_page = (tag['href'])
+    for tag in BeautifulSoup(html_response.text, 'html.parser').findAll('a', href=re.compile('^/photos/')):
+        half_link = tag['href']
+        set_urls.append(site_url + half_link)
 
-	#print(p_page)
-	s5=f'{p_page}page1.html'
-	r=requests.get(s5)
-	soup = BeautifulSoup(r.text, 'html.parser')
-	image_url=[]
-	pages=[]
+    for urls in set_urls:
+        image_url = []
+        set_html = requests.get(urls)
+        for tag in BeautifulSoup(set_html.text, 'html.parser').findAll('img',
+                                                                       src=re.compile('^//pics.jjgirls.com/pictures/'),
+                                                                       alt='thumb'):
+            if tag:
+                image_url.append(('https:' + tag['src']).replace("hd-", ""))
+            else:
+                print("No Image Found")
+        print(f'Image Links Fetched: {urls}')
+        sub_dir_name = urls.split('/')[-1]
 
-	
-	
-	for tag in soup.findAll('a' , class_="paginations__link",  href=re.compile('^page')):
-		pages.append(tag['href'])
-	
-	a=pages[-1]
-	b=a.replace("page" , "")
-	total_pages=b.replace(".html" , "")
+        if len(image_url) == 0:
+            print("No Images Found")
+        else:
+            if not os.path.exists(f'./{name}/{sub_dir_name}'):
+                print("No Existing Directory Found.")
+                print(f'Creating New Directory for {name}/{sub_dir_name}')
+                os.makedirs(f'./{name}/{sub_dir_name}')
 
-	#
-	#print(total_pages)
-
-	
-
-	i = 1
-
-	while i <= int(total_pages):
-		image_htmlc=requests.get(f'{p_page}page{i}.html')
-		urls=[]
-
-		soup2c = BeautifulSoup(image_htmlc.text, 'html.parser')
-
-		for tag in soup2c.findAll('a' , class_="main-content__card-link",  href=re.compile('^https://babesource.com/galleries/')):
-			urls.append(tag['href'])
-
-		#print(len(urls))
-		k = 0
+            with concurrent.futures.ThreadPoolExecutor(max_workers=50) as executor:
+                executor.map(lambda link: download_link(link, f'./{name}/{sub_dir_name}'), list(set(image_url)))
 
 
-		while k < len(urls):
-		
-			image_htmld=requests.get(urls[k])
-			name_a=urls[k].replace("https://babesource.com/galleries/" , "")
-			full_name=name_a.replace(".html" , "")
-			def download_url(url):
-			  print("downloading: ",url)
+def babesSourceExtractor(name):
+    model_html_page = ""
+    site_url = 'https://babesource.com'
+    first_char = name[0]
+    search = f'{site_url}/pornstars/?letter={first_char}'
+    html_response = requests.get(search)
+    for tag in BeautifulSoup(html_response.text, 'html.parser').findAll('a', class_="pornstars-lists__link",
+                                                                        href=re.compile(
+                                                                            f'^{site_url}/pornstars/{name}')):
+        model_html_page = tag['href']
 
-			  file_name_start_pos = url.rfind("/") + 1
+    if model_html_page == "":
+        print("Model Not Found")
+    else:
+        s5 = f'{model_html_page}page1.html'
+        r = requests.get(s5)
+        pages = []
+        for tag in BeautifulSoup(r.text, 'html.parser').findAll('a', class_="paginations__link",
+                                                                href=re.compile('^page')):
+            pages.append(tag['href'])
+        try:
+            total_pages = (pages[-1].replace("page", "")).replace(".html", "")
+        except:
+            total_pages = 1
 
-			  file_name = url[file_name_start_pos:]
-			 
-			  r = requests.get(url, stream=True)
-			  if r.status_code == requests.codes.ok:
-			    with open(f'./{name}/{full_name}{file_name}.jpg', 'wb') as f:
-			      for data in r:
-			        f.write(data)
-			  return url
-			
-			#print(urls[k])
-			
-			soup2d = BeautifulSoup(image_htmld.text, 'html.parser')
+        gallery_urls = []
+        for i in range(1, int(total_pages) + 1):
+            model_gallery_html = requests.get(f'{model_html_page}page{i}.html')
+            for tag in BeautifulSoup(model_gallery_html.text, 'html.parser').findAll('a',
+                                                                                     class_="main-content__card-link",
+                                                                                     href=re.compile(
+                                                                                         '^https://babesource.com/galleries/')):
+                gallery_urls.append(tag['href'])
 
-			for tag in soup2d.findAll('a', class_= "box-massage__card-link" ,href=re.compile('^https://media.babesource.com/galleries/')):
+        for url in gallery_urls:
+            image_url = []
+            gallery_html_response = requests.get(url)
+            for tag in BeautifulSoup(gallery_html_response.text, 'html.parser').findAll('a',
+                                                                                        class_="box-massage__card-link",
+                                                                                        href=re.compile(
+                                                                                            '^https://media.babesource.com/galleries/')):
+                image_url.append(tag['href'])
+            print(f'Image Links Fetched: {url}')
+            sub_dir_name = url.split('/')[-1].replace('.html', '')
+            if not os.path.exists(f'./{name}/{sub_dir_name}'):
+                print("No Existing Directory Found.")
+                print(f'Creating New Directory for {name}/{sub_dir_name}')
+                os.makedirs(f'./{name}/{sub_dir_name}')
+            with concurrent.futures.ThreadPoolExecutor(max_workers=50) as executor:
+                executor.map(lambda link: download_link(link, f'./{name}/{sub_dir_name}'), list(set(image_url)))
+
+def pornPicturesHqExtractor():
+    site_url='https://www.pornpictureshq.com'
+    
+
+def main(name):
+    try:
+        babesPornExtractor(name)
+    except:
+        print("Error While Fetching Links from Babes Porn")
+
+    try:
+        babesSourceExtractor(name)
+    except:
+        print("Error While Fetching Links from Babes Source")
 
 
-				image_url.append(tag['href'])
-				print(image_url)
-			
-			k=k+1
-		image_url = list(set(image_url))
-		results = ThreadPool(10).imap_unordered(download_url,image_url)
-		for r in results:
-			print(r)
-
-
-				
-			
-		i=i+1
-		urls.clear()
-	
-s3()
-s5()
-
-
-
-
-
-		
-		
-
-
-
+if __name__ == "__main__":
+    main(modelName)
